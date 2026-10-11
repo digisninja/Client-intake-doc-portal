@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document Intake Portal - Brazil Retirement</title>
+  <!-- React & ReactDOM (UMD) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel Standalone for in-browser JSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #fef8eb;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1b232a;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, createContext, useContext, useCallback, useMemo } = React;
+
+    // SVG icon fallbacks for lucide-react in standalone environment
+    const createSvgIcon = (paths) => ({ size = 16, color = 'currentColor', style = {}, ...props }) => (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ display: 'inline-block', verticalAlign: 'middle', ...style }}
+        {...props}
+      >
+        {paths}
+      </svg>
+    );
+
+    const Check = createSvgIcon(<polyline points="20 6 9 17 4 12" />);
+    const Circle = ({ size = 16, color = 'currentColor', fill = 'none', style = {}, ...props }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth="2" style={{ display: 'inline-block', verticalAlign: 'middle', ...style }} {...props}>
+        <circle cx="12" cy="12" r="10" />
+      </svg>
+    );
+    const Upload = createSvgIcon(<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></>);
+    const Bell = createSvgIcon(<><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></>);
+    const Plus = createSvgIcon(<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>);
+    const X = createSvgIcon(<><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>);
+    const ChevronDown = createSvgIcon(<polyline points="6 9 12 15 18 9" />);
+    const ChevronUp = createSvgIcon(<polyline points="18 15 12 9 6 15" />);
+    const Users = createSvgIcon(<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>);
+    const FolderOpen = createSvgIcon(<><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2" /></>);
+    const ClipboardCheck = createSvgIcon(<><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="m9 14 2 2 4-4" /></>);
+    const ArrowLeft = createSvgIcon(<><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></>);
+    const Settings = createSvgIcon(<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></>);
+    const LogOut = createSvgIcon(<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>);
+    const FileText = createSvgIcon(<><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" /></>);
+    const Info = createSvgIcon(<><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></>);
+    const AlertTriangle = createSvgIcon(<><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>);
+    const Clock = createSvgIcon(<><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>);
+    const Mail = createSvgIcon(<><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></>);
+    const Eye = createSvgIcon(<><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></>);
+    const ExternalLink = createSvgIcon(<><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></>);
+    const Globe = createSvgIcon(<><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></>);
+    const Search = createSvgIcon(<><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>);
+    const Filter = createSvgIcon(<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />);
+    const Briefcase = createSvgIcon(<><rect width="20" height="14" x="2" y="7" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>);
+    const CheckCircle = createSvgIcon(<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>);
+    const XCircle = createSvgIcon(<><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></>);
+    const RefreshCw = createSvgIcon(<><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></>);
+
+    
+/* ================================================================== */
+/*  BRAND COLORS                                                       */
+/* ================================================================== */
+const BRAND = {
+  gold: "#e4c58a",
+  goldHover: "#d4af6a",
+  goldLight: "#f0ddb5",
+  goldBorder: "rgba(228,197,138,0.4)",
+  cream: "#fef8eb",
+  creamDark: "#fdf0d5",
+  forest: "#0b3911",
+  forestLight: "#1a5c28",
+  forestBg: "rgba(11,57,17,0.08)",
+  ink: "#1b232a",
+  inkLight: "#4a5568",
+  danger: "#c53030",
+  dangerLight: "#fff5f5",
+  dangerBorder: "#feb2b2",
+  white: "#ffffff",
+};
+
+/* ================================================================== */
+/*  TRANSLATION SYSTEM                                                 */
+/* ================================================================== */
+const LangContext = createContext({ lang: "en", setLang: () => {}, t: (k) => k });
+
+const TRANSLATIONS = {
+  en: {
+    // Login
+    loginTitle: "Document Intake Portal",
+    loginSubtitle: "Secure document management for retirement applications",
+    loginAsClient: "Client Login",
+    loginAsLawyer: "Lawyer Login",
+    emailLabel: "Email",
+    passwordLabel: "Password",
+    loginButton: "Sign In",
+    demoHint: "Demo: any password works",
+    // Header
+    portalTitle: "Document Intake Portal",
+    clientPortal: "Client Portal",
+    lawyerDashboard: "Lawyer Dashboard",
+    signOut: "Sign Out",
+    settings: "Settings",
+    // Settings
+    settingsTitle: "Settings",
+    languageLabel: "Language",
+    notifCadenceLabel: "Default Reminder Cadence",
+    every3days: "Every 3 days",
+    weekly: "Weekly",
+    biweekly: "Every 2 weeks",
+    save: "Save",
+    cancel: "Cancel",
+    // Client view
+    welcomeClient: "Welcome back",
+    yourCase: "Your Case",
+    documentsRequired: "Documents Required",
+    progressLabel: "Progress",
+    overallProgress: "Overall Progress",
+    docsRemaining: "documents remaining",
+    uploadDocument: "Upload",
+    uploaded: "Uploaded",
+    missing: "Missing",
+    underReview: "Under Review",
+    viewExample: "View Example",
+    requiredFields: "Required Information",
+    purpose: "Purpose",
+    tips: "How to obtain",
+    sectionComplete: "Section Complete",
+    allDocsSubmitted: "All documents submitted! Your lawyer has been notified.",
+    receiptConfirmed: "Receipt confirmed. No further action needed.",
+    reminderBanner: "Your lawyer has requested these documents.",
+    dueDateLabel: "Requested by",
+    // Lawyer view
+    allCases: "All Cases",
+    newCase: "New Case",
+    confirmReceipt: "Confirm Receipt",
+    sendReminder: "Send Reminder",
+    caseDetail: "Case Detail",
+    backToAll: "Back to all cases",
+    readOnlyNote: "Firm view is read-only — clients upload from their portal.",
+    // Case creation
+    newCaseTitle: "New Retirement Case",
+    clientName: "Client Name",
+    clientEmail: "Client Email",
+    jobCategory: "Job Category",
+    retirementGoal: "Retirement Goal",
+    selectCategory: "Select a category...",
+    selectGoal: "Select a goal...",
+    requiredDocSections: "Required Document Sections",
+    addCustomDoc: "Add Custom Document",
+    createCase: "Create Case & Send to Client",
+    docName: "Document name",
+    docDescription: "Description",
+    // Statuses
+    notStarted: "Not Started",
+    inProgress: "In Progress",
+    readyForReview: "Ready for Review",
+    confirmed: "Confirmed",
+    // Notifications
+    notifications: "Notifications",
+    noNotifications: "No new notifications",
+    allDocsReceived: "All materials received — confirm receipt",
+    docsUploaded: "uploaded documents",
+    overdueNotice: "has overdue documents",
+    reminderSent: "Reminder sent!",
+    // Job categories
+    cat_teacher_union: "Teacher (Unionized)",
+    cat_teacher_non_union: "Teacher (Non-Unionized)",
+    cat_construction: "Construction Worker",
+    cat_government: "Government Employee",
+    cat_private_clt: "Private Sector (CLT)",
+    cat_rural: "Rural Worker",
+    cat_self_employed: "Self-Employed",
+    // Retirement goals
+    goal_age: "Age-Based Retirement",
+    goal_contribution: "Contribution-Time Retirement",
+    goal_special: "Special Conditions Retirement",
+    goal_disability: "Disability Retirement",
+    // Filters
+    filterAll: "All",
+    filterActive: "Active",
+    filterComplete: "Complete",
+    searchPlaceholder: "Search cases...",
+    // Document sections
+    sec_identity: "Identity Documents",
+    sec_employment: "Employment Records",
+    sec_contributions: "Contribution Records",
+    sec_medical: "Medical Records",
+    sec_union: "Union Documents",
+    sec_hazard: "Hazardous Conditions",
+    sec_education: "Education & Licensing",
+    sec_rural: "Rural Activity Proof",
+    sec_government: "Government Service Records",
+    sec_additional: "Additional Documents",
+  },
+  pt: {
+    loginTitle: "Portal de Documentos",
+    loginSubtitle: "Gestão segura de documentos para aposentadoria",
+    loginAsClient: "Login do Cliente",
+    loginAsLawyer: "Login do Advogado",
+    emailLabel: "E-mail",
+    passwordLabel: "Senha",
+    loginButton: "Entrar",
+    demoHint: "Demo: qualquer senha funciona",
+    portalTitle: "Portal de Documentos",
+    clientPortal: "Portal do Cliente",
+    lawyerDashboard: "Painel do Advogado",
+    signOut: "Sair",
+    settings: "Configurações",
+    settingsTitle: "Configurações",
+    languageLabel: "Idioma",
+    notifCadenceLabel: "Frequência de Lembrete Padrão",
+    every3days: "A cada 3 dias",
+    weekly: "Semanal",
+    biweekly: "Quinzenal",
+    save: "Salvar",
+    cancel: "Cancelar",
+    welcomeClient: "Bem-vindo(a) de volta",
+    yourCase: "Seu Caso",
+    documentsRequired: "Documentos Necessários",
+    progressLabel: "Progresso",
+    overallProgress: "Progresso Geral",
+    docsRemaining: "documentos restantes",
+    uploadDocument: "Enviar",
+    uploaded: "Enviado",
+    missing: "Pendente",
+    underReview: "Em Análise",
+    viewExample: "Ver Exemplo",
+    requiredFields: "Informações Necessárias",
+    purpose: "Finalidade",
+    tips: "Como obter",
+    sectionComplete: "Seção Completa",
+    allDocsSubmitted: "Todos os documentos enviados! Seu advogado foi notificado.",
+    receiptConfirmed: "Recebimento confirmado. Nenhuma ação necessária.",
+    reminderBanner: "Seu advogado solicitou estes documentos.",
+    dueDateLabel: "Solicitado até",
+    allCases: "Todos os Casos",
+    newCase: "Novo Caso",
+    confirmReceipt: "Confirmar Recebimento",
+    sendReminder: "Enviar Lembrete",
+    caseDetail: "Detalhe do Caso",
+    backToAll: "Voltar para todos",
+    readOnlyNote: "Visualização do escritório — clientes enviam pelo portal.",
+    newCaseTitle: "Novo Caso de Aposentadoria",
+    clientName: "Nome do Cliente",
+    clientEmail: "E-mail do Cliente",
+    jobCategory: "Categoria Profissional",
+    retirementGoal: "Objetivo de Aposentadoria",
+    selectCategory: "Selecione uma categoria...",
+    selectGoal: "Selecione um objetivo...",
+    requiredDocSections: "Seções de Documentos Necessários",
+    addCustomDoc: "Adicionar Documento Personalizado",
+    createCase: "Criar Caso e Enviar ao Cliente",
+    docName: "Nome do documento",
+    docDescription: "Descrição",
+    notStarted: "Não Iniciado",
+    inProgress: "Em Andamento",
+    readyForReview: "Pronto para Revisão",
+    confirmed: "Confirmado",
+    notifications: "Notificações",
+    noNotifications: "Sem notificações",
+    allDocsReceived: "Todos os documentos recebidos — confirmar recebimento",
+    docsUploaded: "documentos enviados",
+    overdueNotice: "tem documentos atrasados",
+    reminderSent: "Lembrete enviado!",
+    cat_teacher_union: "Professor(a) Sindicalizado(a)",
+    cat_teacher_non_union: "Professor(a) Não Sindicalizado(a)",
+    cat_construction: "Construção Civil",
+    cat_government: "Servidor(a) Público(a)",
+    cat_private_clt: "Setor Privado (CLT)",
+    cat_rural: "Trabalhador(a) Rural",
+    cat_self_employed: "Autônomo / Contribuinte Individual",
+    goal_age: "Aposentadoria por Idade",
+    goal_contribution: "Aposentadoria por Tempo de Contribuição",
+    goal_special: "Aposentadoria Especial",
+    goal_disability: "Aposentadoria por Invalidez",
+    filterAll: "Todos",
+    filterActive: "Ativos",
+    filterComplete: "Concluídos",
+    searchPlaceholder: "Buscar casos...",
+    sec_identity: "Documentos de Identidade",
+    sec_employment: "Registros de Emprego",
+    sec_contributions: "Registros de Contribuição",
+    sec_medical: "Registros Médicos",
+    sec_union: "Documentos Sindicais",
+    sec_hazard: "Condições Perigosas",
+    sec_education: "Educação e Licenças",
+    sec_rural: "Comprovação de Atividade Rural",
+    sec_government: "Registros de Serviço Público",
+    sec_additional: "Documentos Adicionais",
+  },
+};
+
+function useLang() {
+  return useContext(LangContext);
+}
+
+/* ================================================================== */
+/*  DOCUMENT TEMPLATES — BRAZIL RETIREMENT                             */
+/* ================================================================== */
+
+/* Visual example types:
+   "id-card"      — Card with photo placeholder and fields
+   "table"        — Tabular report (CNIS, FGTS)
+   "workbook"     — Multi-page booklet (CTPS)
+   "certificate"  — Official document with seal
+   "form"         — Fillable form
+   "letter"       — Letter/declaration
+   "medical"      — Medical report
+*/
+
+const COMMON_DOCS = {
+  cpf: {
+    name: "CPF — Individual Taxpayer Registration",
+    namePt: "CPF — Cadastro de Pessoa Física",
+    section: "identity",
+    summary: "Your unique taxpayer identification number issued by the Brazilian Federal Revenue Service. Required for all government interactions.",
+    summaryPt: "Seu número único de identificação fiscal emitido pela Receita Federal do Brasil. Obrigatório para todas as interações governamentais.",
+    requiredFields: ["Full legal name", "CPF number (11 digits)", "Date of birth"],
+    requiredFieldsPt: ["Nome legal completo", "Número do CPF (11 dígitos)", "Data de nascimento"],
+    tips: "Available via Receita Federal website or any Banco do Brasil / Caixa Econômica branch.",
+    tipsPt: "Disponível pelo site da Receita Federal ou qualquer agência do Banco do Brasil / Caixa Econômica.",
+    exampleUrl: "https://example.com/cpf-sample",
+    visualType: "id-card",
+    visualFields: ["Nome: MARIA DA SILVA SANTOS", "CPF: 123.456.789-00", "Nascimento: 15/03/1965"],
+  },
+  rg: {
+    name: "RG or CNH — Identity Document",
+    namePt: "RG ou CNH — Documento de Identidade",
+    section: "identity",
+    summary: "Government-issued photo identification. Must be current and clearly legible. Either RG (identity card) or CNH (driver's license) is accepted.",
+    summaryPt: "Documento de identificação com foto emitido pelo governo. Deve estar vigente e legível. RG (carteira de identidade) ou CNH (carteira de habilitação) são aceitos.",
+    requiredFields: ["Full name", "Photo", "ID number", "Issuing authority", "Issue date"],
+    requiredFieldsPt: ["Nome completo", "Foto", "Número de registro", "Órgão emissor", "Data de emissão"],
+    tips: "Must not be expired. If damaged or faded, request a new copy from the SSP of your state.",
+    tipsPt: "Não pode estar vencido. Se danificado ou desbotado, solicite nova via na SSP do seu estado.",
+    exampleUrl: "https://example.com/rg-sample",
+    visualType: "id-card",
+    visualFields: ["Nome: MARIA DA SILVA SANTOS", "RG: 12.345.678-9", "SSP/SP", "Nascimento: 15/03/1965"],
+  },
+  address: {
+    name: "Proof of Address",
+    namePt: "Comprovante de Residência",
+    section: "identity",
+    summary: "Recent utility bill or bank statement proving your current residential address. Must be dated within the last 3 months.",
+    summaryPt: "Conta de serviço público ou extrato bancário recente comprovando seu endereço residencial atual. Deve ter data dos últimos 3 meses.",
+    requiredFields: ["Your full name or household member", "Complete address", "Date (within 3 months)", "Utility company name"],
+    requiredFieldsPt: ["Seu nome completo ou membro da residência", "Endereço completo", "Data (últimos 3 meses)", "Nome da empresa de serviço"],
+    tips: "Electric, water, gas, or telephone bill. Bank statements also accepted. Internet bills accepted if in your name.",
+    tipsPt: "Conta de luz, água, gás ou telefone. Extratos bancários também aceitos. Contas de internet aceitas se estiverem em seu nome.",
+    exampleUrl: "https://example.com/address-sample",
+    visualType: "letter",
+    visualFields: ["COPEL — Energia Elétrica", "Titular: MARIA DA SILVA", "R. das Flores, 123 — Centro", "Curitiba — PR, 80000-000", "Ref: Set/2026"],
+  },
+  cnis: {
+    name: "CNIS — Social Security Contribution Record",
+    namePt: "CNIS — Cadastro Nacional de Informações Sociais",
+    section: "contributions",
+    summary: "Official record from INSS listing all your social security contributions throughout your career. This is the primary document used to calculate your retirement benefit.",
+    summaryPt: "Registro oficial do INSS listando todas as suas contribuições previdenciárias ao longo da carreira. É o documento principal usado para calcular seu benefício de aposentadoria.",
+    requiredFields: ["Full name", "CPF / NIT / PIS / PASEP", "All contribution periods", "Employer names & CNPJ", "Salary amounts per period"],
+    requiredFieldsPt: ["Nome completo", "CPF / NIT / PIS / PASEP", "Todos os períodos de contribuição", "Nomes e CNPJ dos empregadores", "Valores de salário por período"],
+    tips: "Request via Meu INSS app (meu.inss.gov.br) or visit any INSS office. Request the 'Extrato Detalhado' version for completeness.",
+    tipsPt: "Solicite pelo app Meu INSS (meu.inss.gov.br) ou visite qualquer agência do INSS. Solicite a versão 'Extrato Detalhado' para completude.",
+    exampleUrl: "https://example.com/cnis-sample",
+    visualType: "table",
+    visualFields: ["NIT: 123.45678.90-1", "Seq | Início | Fim | Empregador", "01 | 03/1990 | 12/1995 | Empresa ABC Ltda", "02 | 01/1996 | 06/2005 | Indústria XYZ S.A.", "03 | 07/2005 | Atual | Prefeitura Municipal"],
+  },
+  ctps: {
+    name: "CTPS — Work Card (all pages)",
+    namePt: "CTPS — Carteira de Trabalho e Previdência Social",
+    section: "employment",
+    summary: "Your complete work card showing all employment history. If physical, scan all pages including blank ones. If digital, export the complete PDF from the gov.br app.",
+    summaryPt: "Sua carteira de trabalho completa mostrando todo o histórico empregatício. Se física, digitalize todas as páginas, incluindo as em branco. Se digital, exporte o PDF completo pelo app gov.br.",
+    requiredFields: ["Photo page", "Qualification page", "All employment contract entries", "Salary change entries", "Annotations"],
+    requiredFieldsPt: ["Página com foto", "Página de qualificação", "Todos os registros de contrato de trabalho", "Anotações de alteração salarial", "Anotações gerais"],
+    tips: "Physical CTPS: scan every page front and back. Digital CTPS: access via the Carteira de Trabalho Digital app or gov.br portal.",
+    tipsPt: "CTPS física: digitalize cada página frente e verso. CTPS digital: acesse pelo app Carteira de Trabalho Digital ou portal gov.br.",
+    exampleUrl: "https://example.com/ctps-sample",
+    visualType: "workbook",
+    visualFields: ["CARTEIRA DE TRABALHO", "E PREVIDÊNCIA SOCIAL", "Nome: MARIA DA SILVA SANTOS", "Nº: 012345 / Série: 0001-SP", "Emissão: 10/02/1989"],
+  },
+};
+
+const CATEGORY_DOCS = {
+  teacher_union: [
+    {
+      name: "Union Membership Card",
+      namePt: "Carteira de Sócio do Sindicato",
+      section: "union",
+      summary: "Proof of active membership in the teachers' union (sindicato). Must show current dues payment status.",
+      summaryPt: "Comprovante de filiação ativa ao sindicato dos professores. Deve mostrar status atual de pagamento das contribuições.",
+      requiredFields: ["Member name", "Union name", "Membership number", "Active status", "Dues paid through date"],
+      requiredFieldsPt: ["Nome do associado", "Nome do sindicato", "Número de associação", "Status ativo", "Contribuições pagas até"],
+      tips: "Request from your union's local chapter. If membership has lapsed, contact the union to reinstate.",
+      tipsPt: "Solicite na seção local do seu sindicato. Se a filiação expirou, entre em contato com o sindicato para reativar.",
+      exampleUrl: "https://example.com/union-card-sample",
+      visualType: "id-card",
+      visualFields: ["SINDICATO DOS PROFESSORES", "Associado: MARIA DA SILVA", "Nº: 98765", "Status: ATIVO", "Válido até: 12/2026"],
+    },
+    {
+      name: "Teaching License / Diploma",
+      namePt: "Licença para Lecionar / Diploma",
+      section: "education",
+      summary: "Your teaching degree or license proving qualification as a professional educator. Required for special retirement age calculation for teachers.",
+      summaryPt: "Seu diploma ou licença de ensino comprovando qualificação como educador profissional. Obrigatório para cálculo especial de idade de aposentadoria para professores.",
+      requiredFields: ["Full name", "Degree type (Licenciatura)", "Institution name", "Graduation date", "MEC registration number"],
+      requiredFieldsPt: ["Nome completo", "Tipo de diploma (Licenciatura)", "Nome da instituição", "Data de formatura", "Número de registro no MEC"],
+      tips: "Original diploma or certified copy. If lost, request a second copy from your university.",
+      tipsPt: "Diploma original ou cópia autenticada. Se perdido, solicite segunda via na sua universidade.",
+      exampleUrl: "https://example.com/teaching-license-sample",
+      visualType: "certificate",
+      visualFields: ["UNIVERSIDADE FEDERAL", "DIPLOMA", "Licenciatura em Pedagogia", "MARIA DA SILVA SANTOS", "Concluído em: 15/12/1988", "Registro MEC: 12345"],
+    },
+    {
+      name: "School Employment Records",
+      namePt: "Registros de Emprego Escolar",
+      section: "employment",
+      summary: "Employment declarations from each school where you worked, confirming classroom teaching activities (regência de classe).",
+      summaryPt: "Declarações de emprego de cada escola onde trabalhou, confirmando atividades de ensino em sala de aula (regência de classe).",
+      requiredFields: ["School name & CNPJ", "Employment period (start/end)", "Position held", "Subjects taught", "Confirmation of classroom teaching"],
+      requiredFieldsPt: ["Nome da escola e CNPJ", "Período de emprego (início/fim)", "Cargo ocupado", "Disciplinas lecionadas", "Confirmação de regência de classe"],
+      tips: "Request from each school's HR department. If the school has closed, contact the municipal or state education secretariat.",
+      tipsPt: "Solicite no departamento de RH de cada escola. Se a escola fechou, contate a secretaria municipal ou estadual de educação.",
+      exampleUrl: "https://example.com/school-records-sample",
+      visualType: "letter",
+      visualFields: ["ESCOLA MUNICIPAL XYZ", "DECLARAÇÃO", "Declaramos que MARIA DA SILVA", "exerceu a função de PROFESSORA", "de 03/1990 a 12/2005", "em regime de sala de aula"],
+    },
+    {
+      name: "Union Contribution Payment Proof",
+      namePt: "Comprovante de Contribuição Sindical",
+      section: "union",
+      summary: "Receipts or statements showing your history of union dues payments. Confirms your association period for benefit calculation.",
+      summaryPt: "Recibos ou extratos mostrando histórico de pagamento de contribuições sindicais. Confirma período de associação para cálculo de benefícios.",
+      requiredFields: ["Member name", "Payment periods", "Amounts paid", "Union identification"],
+      requiredFieldsPt: ["Nome do associado", "Períodos de pagamento", "Valores pagos", "Identificação do sindicato"],
+      tips: "Available from your union's finance department. Annual statements are typically issued in January.",
+      tipsPt: "Disponível no departamento financeiro do seu sindicato. Extratos anuais são geralmente emitidos em janeiro.",
+      exampleUrl: "https://example.com/union-payment-sample",
+      visualType: "table",
+      visualFields: ["EXTRATO DE CONTRIBUIÇÕES", "Sindicato dos Professores", "Ano | Meses Pagos | Total", "2024 | 12/12 | R$ 1.440,00", "2025 | 12/12 | R$ 1.560,00"],
+    },
+  ],
+  teacher_non_union: [
+    {
+      name: "Teaching License / Diploma",
+      namePt: "Licença para Lecionar / Diploma",
+      section: "education",
+      summary: "Your teaching degree or license proving qualification as a professional educator.",
+      summaryPt: "Seu diploma ou licença de ensino comprovando qualificação como educador profissional.",
+      requiredFields: ["Full name", "Degree type (Licenciatura)", "Institution name", "Graduation date", "MEC registration number"],
+      requiredFieldsPt: ["Nome completo", "Tipo de diploma (Licenciatura)", "Nome da instituição", "Data de formatura", "Número de registro no MEC"],
+      tips: "Original diploma or certified copy.",
+      tipsPt: "Diploma original ou cópia autenticada.",
+      exampleUrl: "https://example.com/teaching-license-sample",
+      visualType: "certificate",
+      visualFields: ["UNIVERSIDADE FEDERAL", "DIPLOMA", "Licenciatura em Letras", "JOSÉ CARLOS OLIVEIRA", "Concluído em: 10/07/1992"],
+    },
+    {
+      name: "School Employment Records",
+      namePt: "Registros de Emprego Escolar",
+      section: "employment",
+      summary: "Employment declarations from each school confirming classroom teaching.",
+      summaryPt: "Declarações de emprego de cada escola confirmando atividade de ensino em sala de aula.",
+      requiredFields: ["School name & CNPJ", "Employment period", "Position held", "Subjects taught", "Classroom teaching confirmation"],
+      requiredFieldsPt: ["Nome da escola e CNPJ", "Período de emprego", "Cargo ocupado", "Disciplinas lecionadas", "Confirmação de regência de classe"],
+      tips: "Request from school HR. If school closed, try the education secretariat.",
+      tipsPt: "Solicite no RH da escola. Se fechou, tente a secretaria de educação.",
+      exampleUrl: "https://example.com/school-records-sample",
+      visualType: "letter",
+      visualFields: ["COLÉGIO ESTADUAL ABC", "DECLARAÇÃO", "Declaramos que JOSÉ CARLOS", "atuou como PROFESSOR", "de 02/1993 a 11/2020"],
+    },
+  ],
+  construction: [
+    {
+      name: "PPP — Occupational Profile",
+      namePt: "PPP — Perfil Profissiográfico Previdenciário",
+      section: "hazard",
+      summary: "Mandatory document issued by each employer detailing your exposure to hazardous agents (noise, chemicals, physical hazards). Essential for special retirement (aposentadoria especial).",
+      summaryPt: "Documento obrigatório emitido por cada empregador detalhando sua exposição a agentes nocivos (ruído, químicos, riscos físicos). Essencial para aposentadoria especial.",
+      requiredFields: ["Employee data & CPF", "Company data & CNPJ", "Job description", "Hazardous agents exposed to", "Exposure intensity/concentration", "EPC/EPI used", "Responsible engineer/physician", "LTCAT reference"],
+      requiredFieldsPt: ["Dados do trabalhador e CPF", "Dados da empresa e CNPJ", "Descrição do cargo", "Agentes nocivos de exposição", "Intensidade/concentração da exposição", "EPC/EPI utilizados", "Engenheiro/médico responsável", "Referência ao LTCAT"],
+      tips: "Request from each employer's HR or safety department. Companies are legally required to provide this. If the company closed, try the labor court (Justiça do Trabalho) records.",
+      tipsPt: "Solicite no RH ou departamento de segurança de cada empregador. Empresas são legalmente obrigadas a fornecer. Se a empresa fechou, tente os registros da Justiça do Trabalho.",
+      exampleUrl: "https://example.com/ppp-sample",
+      visualType: "form",
+      visualFields: ["PERFIL PROFISSIOGRÁFICO", "PREVIDENCIÁRIO — PPP", "Empresa: Construtora ABC Ltda", "Cargo: Pedreiro", "Agente: Ruído — 92 dB(A)", "Período: 01/2000 a 06/2015"],
+    },
+    {
+      name: "LTCAT — Technical Conditions Report",
+      namePt: "LTCAT — Laudo Técnico de Condições Ambientais do Trabalho",
+      section: "hazard",
+      summary: "Technical report prepared by a qualified engineer or physician documenting the environmental conditions of your workplace. Supports the PPP document.",
+      summaryPt: "Laudo técnico preparado por engenheiro ou médico qualificado documentando as condições ambientais do seu local de trabalho. Apoia o documento PPP.",
+      requiredFields: ["Company identification", "Workplace description", "Hazardous agents measured", "Measurement methodology", "Exposure limits", "Engineer/physician credentials"],
+      requiredFieldsPt: ["Identificação da empresa", "Descrição do local de trabalho", "Agentes nocivos medidos", "Metodologia de medição", "Limites de exposição", "Credenciais do engenheiro/médico"],
+      tips: "Usually kept by the employer. Request alongside the PPP. If unavailable, a new assessment can be done by a qualified safety engineer.",
+      tipsPt: "Geralmente mantido pelo empregador. Solicite junto com o PPP. Se indisponível, uma nova avaliação pode ser feita por engenheiro de segurança qualificado.",
+      exampleUrl: "https://example.com/ltcat-sample",
+      visualType: "form",
+      visualFields: ["LTCAT", "Laudo Técnico de Condições", "Ambientais do Trabalho", "Empresa: Construtora ABC Ltda", "Setor: Obras Civis", "Nível Ruído: 92 dB(A)"],
+    },
+    {
+      name: "CAT — Workplace Accident Reports",
+      namePt: "CAT — Comunicação de Acidente de Trabalho",
+      section: "hazard",
+      summary: "Report of any workplace accidents or occupational diseases suffered during your career. Important for disability retirement or special conditions claims.",
+      summaryPt: "Relatório de acidentes de trabalho ou doenças ocupacionais sofridos durante sua carreira. Importante para aposentadoria por invalidez ou condições especiais.",
+      requiredFields: ["Date of incident", "Type of accident/disease", "Body part affected", "Company at time of incident", "Medical description", "CID code"],
+      requiredFieldsPt: ["Data do incidente", "Tipo de acidente/doença", "Parte do corpo afetada", "Empresa na época do incidente", "Descrição médica", "Código CID"],
+      tips: "Filed by the employer with INSS. Request copies from your employer or from INSS directly.",
+      tipsPt: "Registrado pelo empregador junto ao INSS. Solicite cópias do empregador ou diretamente no INSS.",
+      exampleUrl: "https://example.com/cat-sample",
+      visualType: "form",
+      visualFields: ["COMUNICAÇÃO DE ACIDENTE", "DE TRABALHO — CAT", "Trabalhador: JOSÉ PEREIRA", "Data: 15/03/2018", "Tipo: Acidente típico", "CID: S62.0"],
+    },
+  ],
+  government: [
+    {
+      name: "Appointment Decree / Portaria",
+      namePt: "Decreto de Nomeação / Portaria",
+      section: "government",
+      summary: "Official government document recording your appointment to the public service position. Establishes the start of your government service period.",
+      summaryPt: "Documento oficial do governo registrando sua nomeação ao cargo público. Estabelece o início do seu período de serviço público.",
+      requiredFields: ["Full name", "Position title", "Government body", "Appointment date", "Decree/Portaria number", "Publication in Official Gazette"],
+      requiredFieldsPt: ["Nome completo", "Título do cargo", "Órgão governamental", "Data de nomeação", "Número do decreto/portaria", "Publicação no Diário Oficial"],
+      tips: "Available from your department's HR (Recursos Humanos). Also published in the Diário Oficial — searchable online.",
+      tipsPt: "Disponível no RH do seu departamento. Também publicado no Diário Oficial — pesquisável online.",
+      exampleUrl: "https://example.com/portaria-sample",
+      visualType: "certificate",
+      visualFields: ["PREFEITURA MUNICIPAL", "PORTARIA Nº 1234/2005", "Nomeia MARIA DA SILVA SANTOS", "para o cargo de ANALISTA", "a partir de 01/03/2005", "Publicado no D.O. 02/03/2005"],
+    },
+    {
+      name: "Time-of-Service Certificate",
+      namePt: "Certidão de Tempo de Serviço / CTC",
+      section: "government",
+      summary: "Official certificate issued by the government HR department certifying your total time of public service. Essential for calculating retirement eligibility.",
+      summaryPt: "Certidão oficial emitida pelo RH do governo certificando seu tempo total de serviço público. Essencial para calcular elegibilidade de aposentadoria.",
+      requiredFields: ["Full name & CPF", "Position(s) held", "Total service time (years, months, days)", "Periods of leave", "Contribution confirmation", "Issuing authority signature & seal"],
+      requiredFieldsPt: ["Nome completo e CPF", "Cargo(s) ocupado(s)", "Tempo total de serviço (anos, meses, dias)", "Períodos de licença", "Confirmação de contribuição", "Assinatura e selo da autoridade emissora"],
+      tips: "Request from the HR department of each government body you served. Processing may take 30-60 days.",
+      tipsPt: "Solicite no RH de cada órgão público onde serviu. Processamento pode levar 30-60 dias.",
+      exampleUrl: "https://example.com/ctc-sample",
+      visualType: "certificate",
+      visualFields: ["CERTIDÃO DE TEMPO", "DE CONTRIBUIÇÃO", "Servidor: MARIA DA SILVA SANTOS", "Órgão: Prefeitura de São Paulo", "Período: 01/03/2005 a 30/09/2026", "Tempo: 21 anos, 6 meses, 30 dias"],
+    },
+    {
+      name: "Last Three Paycheck Stubs",
+      namePt: "Últimos Três Contracheques",
+      section: "government",
+      summary: "Your three most recent paycheck stubs from the government position. Used to verify current salary for benefit calculation.",
+      summaryPt: "Seus três contracheques mais recentes do cargo público. Usados para verificar salário atual para cálculo de benefício.",
+      requiredFields: ["Employee name", "Position", "Gross salary", "Deductions (INSS, IR)", "Net salary", "Month/year reference"],
+      requiredFieldsPt: ["Nome do servidor", "Cargo", "Salário bruto", "Descontos (INSS, IR)", "Salário líquido", "Referência mês/ano"],
+      tips: "Access via your government's payroll portal or request from HR.",
+      tipsPt: "Acesse pelo portal de folha de pagamento do governo ou solicite no RH.",
+      exampleUrl: "https://example.com/paycheck-sample",
+      visualType: "table",
+      visualFields: ["CONTRACHEQUE — Set/2026", "Servidor: MARIA DA SILVA SANTOS", "Cargo: Analista Administrativo", "Bruto: R$ 8.500,00", "INSS: -R$ 935,00 | IR: -R$ 850,00", "Líquido: R$ 6.715,00"],
+    },
+  ],
+  private_clt: [
+    {
+      name: "Termination Records (TRCT)",
+      namePt: "TRCT — Termo de Rescisão de Contrato de Trabalho",
+      section: "employment",
+      summary: "Employment termination documents for each former employer. Shows end date, reason for termination, and final settlement amounts.",
+      summaryPt: "Documentos de rescisão de contrato de cada empregador anterior. Mostra data de término, motivo da rescisão e valores de acerto final.",
+      requiredFields: ["Employee name & CPF", "Employer name & CNPJ", "Admission date", "Termination date", "Reason for termination", "Settlement amounts"],
+      requiredFieldsPt: ["Nome do empregado e CPF", "Nome do empregador e CNPJ", "Data de admissão", "Data de rescisão", "Motivo da rescisão", "Valores de acerto"],
+      tips: "You should have received this when you left each job. If lost, the employer is required to provide a copy.",
+      tipsPt: "Você deveria ter recebido ao sair de cada emprego. Se perdido, o empregador é obrigado a fornecer uma cópia.",
+      exampleUrl: "https://example.com/trct-sample",
+      visualType: "form",
+      visualFields: ["TERMO DE RESCISÃO", "DO CONTRATO DE TRABALHO", "Empregado: CARLOS A. LIMA", "Empregador: Tech Solutions Ltda", "Admissão: 01/06/2010", "Rescisão: 30/11/2023"],
+    },
+    {
+      name: "FGTS Statement",
+      namePt: "Extrato do FGTS",
+      section: "contributions",
+      summary: "Complete statement of your FGTS (Severance Indemnity Fund) showing all employer deposits. Helps verify employment periods and salary history.",
+      summaryPt: "Extrato completo do FGTS (Fundo de Garantia por Tempo de Serviço) mostrando todos os depósitos dos empregadores. Ajuda a verificar períodos de emprego e histórico salarial.",
+      requiredFields: ["Account holder name", "PIS/PASEP number", "All deposit entries", "Employer identification for each deposit", "Current balance"],
+      requiredFieldsPt: ["Nome do titular da conta", "Número PIS/PASEP", "Todos os depósitos", "Identificação do empregador de cada depósito", "Saldo atual"],
+      tips: "Access via the FGTS app (Caixa Econômica Federal) or any Caixa branch. Request the 'Extrato Completo' for full history.",
+      tipsPt: "Acesse pelo app FGTS (Caixa Econômica Federal) ou qualquer agência da Caixa. Solicite o 'Extrato Completo' para histórico total.",
+      exampleUrl: "https://example.com/fgts-sample",
+      visualType: "table",
+      visualFields: ["EXTRATO FGTS", "Titular: CARLOS A. LIMA", "PIS: 123.45678.90-1", "Mês | Depósito | Empregador", "Set/26 | R$ 680,00 | Tech Sol. Ltda", "Saldo: R$ 145.320,00"],
+    },
+  ],
+  rural: [
+    {
+      name: "Rural Activity Declaration",
+      namePt: "Declaração de Atividade Rural",
+      section: "rural",
+      summary: "Declaration confirming your rural work activities. Can be self-declared but must be corroborated by additional evidence.",
+      summaryPt: "Declaração confirmando suas atividades de trabalho rural. Pode ser autodeclarada mas deve ser corroborada por evidências adicionais.",
+      requiredFields: ["Full name & CPF", "Property location", "Type of rural activity", "Period of activity", "Witnesses (if applicable)"],
+      requiredFieldsPt: ["Nome completo e CPF", "Localização da propriedade", "Tipo de atividade rural", "Período de atividade", "Testemunhas (se aplicável)"],
+      tips: "Can be drafted by your lawyer. Must be accompanied by at least 3 corroborating documents.",
+      tipsPt: "Pode ser redigida pelo seu advogado. Deve ser acompanhada de pelo menos 3 documentos comprobatórios.",
+      exampleUrl: "https://example.com/rural-declaration-sample",
+      visualType: "letter",
+      visualFields: ["DECLARAÇÃO DE", "ATIVIDADE RURAL", "Eu, JOÃO SILVA, declaro que", "exerci atividade rural na", "Fazenda São José — Goiás", "de 1985 a 2020"],
+    },
+    {
+      name: "ITR — Rural Property Tax",
+      namePt: "ITR — Imposto Territorial Rural",
+      section: "rural",
+      summary: "Rural property tax receipts proving ownership or use of rural land. Strong evidence for rural worker retirement claims.",
+      summaryPt: "Recibos de imposto territorial rural comprovando propriedade ou uso de terra rural. Forte evidência para pedidos de aposentadoria de trabalhador rural.",
+      requiredFields: ["Property owner name", "Property registration (NIRF)", "Location (municipality/state)", "Tax year", "Payment confirmation"],
+      requiredFieldsPt: ["Nome do proprietário", "Registro do imóvel (NIRF)", "Localização (município/estado)", "Ano fiscal", "Confirmação de pagamento"],
+      tips: "Receipts from Receita Federal. Also check with your municipality's tax office.",
+      tipsPt: "Recibos da Receita Federal. Verifique também na prefeitura do seu município.",
+      exampleUrl: "https://example.com/itr-sample",
+      visualType: "form",
+      visualFields: ["IMPOSTO SOBRE A", "PROPRIEDADE TERRITORIAL RURAL", "Contribuinte: JOÃO SILVA", "NIRF: 1234567", "Município: Jataí — GO", "Exercício: 2026"],
+    },
+    {
+      name: "Union or Rural Worker Registration",
+      namePt: "Registro no Sindicato Rural ou STR",
+      section: "rural",
+      summary: "Registration with the rural workers' union (Sindicato dos Trabalhadores Rurais). Important corroborating evidence for rural activity.",
+      summaryPt: "Registro no sindicato dos trabalhadores rurais (STR). Importante evidência comprobatória de atividade rural.",
+      requiredFields: ["Member name", "Union name & location", "Registration date", "Activity type", "Active/inactive status"],
+      requiredFieldsPt: ["Nome do associado", "Nome e localização do sindicato", "Data de registro", "Tipo de atividade", "Status ativo/inativo"],
+      tips: "Visit your local STR to request proof of membership. Historical records can also serve as evidence.",
+      tipsPt: "Visite seu STR local para solicitar comprovante de filiação. Registros históricos também servem como evidência.",
+      exampleUrl: "https://example.com/str-sample",
+      visualType: "id-card",
+      visualFields: ["SINDICATO DOS TRABALHADORES", "RURAIS DE JATAÍ — GO", "Associado: JOÃO SILVA", "Desde: 15/04/1990", "Atividade: Agricultura familiar"],
+    },
+  ],
+  self_employed: [
+    {
+      name: "GPS — Social Security Payment Receipts",
+      namePt: "GPS — Guias de Recolhimento da Previdência Social",
+      section: "contributions",
+      summary: "Your individual social security contribution payment receipts (carnês). Proves your contribution periods as an individual contributor.",
+      summaryPt: "Seus recibos de pagamento de contribuição previdenciária individual (carnês). Comprova seus períodos de contribuição como contribuinte individual.",
+      requiredFields: ["Contributor name & CPF/NIT", "Payment date", "Contribution amount", "Reference month/year", "Payment code (1007, 1104, etc.)"],
+      requiredFieldsPt: ["Nome do contribuinte e CPF/NIT", "Data de pagamento", "Valor da contribuição", "Mês/ano de referência", "Código de pagamento (1007, 1104, etc.)"],
+      tips: "Keep all original payment slips. If lost, request payment history from INSS or via Meu INSS app.",
+      tipsPt: "Guarde todos os comprovantes originais. Se perdidos, solicite histórico de pagamentos no INSS ou via app Meu INSS.",
+      exampleUrl: "https://example.com/gps-sample",
+      visualType: "form",
+      visualFields: ["GUIA DA PREVIDÊNCIA SOCIAL", "Contribuinte: ANA R. COSTA", "NIT: 987.65432.10-1", "Competência: 09/2026", "Valor: R$ 1.412,00", "Código: 1007"],
+    },
+    {
+      name: "Income Tax Returns (IRPF)",
+      namePt: "Declarações de Imposto de Renda (IRPF)",
+      section: "contributions",
+      summary: "Your annual income tax returns showing declared income. Helps establish contribution basis and income history for self-employed periods.",
+      summaryPt: "Suas declarações anuais de imposto de renda mostrando rendimentos declarados. Ajuda a estabelecer base de contribuição e histórico de renda para períodos autônomos.",
+      requiredFields: ["Declarant name & CPF", "Tax year", "Total declared income", "Professional activity category", "INSS contributions declared"],
+      requiredFieldsPt: ["Nome do declarante e CPF", "Ano-exercício", "Rendimentos totais declarados", "Categoria de atividade profissional", "Contribuições ao INSS declaradas"],
+      tips: "Access previous declarations via the Receita Federal e-CAC portal or your accountant.",
+      tipsPt: "Acesse declarações anteriores pelo portal e-CAC da Receita Federal ou com seu contador.",
+      exampleUrl: "https://example.com/irpf-sample",
+      visualType: "form",
+      visualFields: ["DECLARAÇÃO DE AJUSTE ANUAL", "IMPOSTO DE RENDA — 2025", "Contribuinte: ANA R. COSTA", "CPF: 987.654.321-00", "Rendimentos: R$ 96.000,00", "INSS pago: R$ 16.944,00"],
+    },
+    {
+      name: "Professional Registration / MEI Certificate",
+      namePt: "Registro Profissional / Certificado MEI",
+      section: "employment",
+      summary: "Proof of registration as a self-employed professional (autônomo) or Microempreendedor Individual (MEI). Establishes your work category.",
+      summaryPt: "Comprovante de registro como profissional autônomo ou Microempreendedor Individual (MEI). Estabelece sua categoria de trabalho.",
+      requiredFields: ["Full name & CPF/CNPJ", "Registration type (MEI, Autônomo)", "Activity code (CNAE)", "Registration date", "Active status"],
+      requiredFieldsPt: ["Nome completo e CPF/CNPJ", "Tipo de registro (MEI, Autônomo)", "Código de atividade (CNAE)", "Data de registro", "Status ativo"],
+      tips: "MEI certificate available at Portal do Empreendedor. Autônomo registration via the municipal government (ISS).",
+      tipsPt: "Certificado MEI disponível no Portal do Empreendedor. Registro autônomo via prefeitura (ISS).",
+      exampleUrl: "https://example.com/mei-sample",
+      visualType: "certificate",
+      visualFields: ["CERTIFICADO DE CONDIÇÃO DE", "MICROEMPREENDEDOR INDIVIDUAL", "ANA RITA COSTA", "CNPJ: 12.345.678/0001-90", "CNAE: 9602-5/01", "Situação: ATIVO"],
+    },
+  ],
+};
+
+/* Build the full doc list for a given job category */
+function getDocsForCategory(categoryKey) {
+  const common = Object.values(COMMON_DOCS);
+  const specific = CATEGORY_DOCS[categoryKey] || [];
+  return [...common, ...specific];
+}
+
+/* Group docs by section */
+function groupBySection(docs) {
+  const groups = {};
+  docs.forEach((d) => {
+    if (!groups[d.section]) groups[d.section] = [];
+    groups[d.section].push(d);
+  });
+  return groups;
+}
+
+/* ================================================================== */
+/*  UNIQUE ID GENERATOR                                                */
+/* ================================================================== */
+const uid = (() => {
+  let n = 0;
+  return (p) => `${p}-${++n}`;
+})();
+
+/* ================================================================== */
+/*  SEED DATA                                                          */
+/* ================================================================== */
+function buildCase({ client, email, matter, category, goal, docOverrides }) {
+  const baseDocs = getDocsForCategory(category);
+  const sections = groupBySection(baseDocs);
+  const folders = Object.entries(sections).map(([sectionKey, docs]) => ({
+    id: uid("folder"),
+    sectionKey,
+    docs: docs.map((d, i) => ({
+      id: uid("doc"),
+      ...d,
+      status: docOverrides?.[sectionKey]?.[i] ?? "missing",
+    })),
+  }));
+  return { id: uid("case"), client, email, matter, category, goal, confirmed: false, folders, reminderCadence: "weekly", lastReminder: null, notifications: [] };
+}
+
+const seedCases = () => [
+  buildCase({
+    client: "Maria da Silva Santos",
+    email: "maria.silva@email.com",
+    matter: "Age-Based Retirement",
+    category: "teacher_union",
+    goal: "goal_age",
+    docOverrides: {
+      identity: ["uploaded", "uploaded", "uploaded"],
+      contributions: ["uploaded"],
+      employment: ["uploaded", "missing"],
+      union: ["uploaded", "missing"],
+      education: ["missing"],
+    },
+  }),
+  buildCase({
+    client: "Carlos Alberto Lima",
+    email: "carlos.lima@email.com",
+    matter: "Contribution-Time Retirement",
+    category: "private_clt",
+    goal: "goal_contribution",
+    docOverrides: {
+      identity: ["uploaded", "missing", "uploaded"],
+      employment: ["uploaded", "uploaded"],
+      contributions: ["uploaded", "missing"],
+    },
+  }),
+  buildCase({
+    client: "José Pereira da Costa",
+    email: "jose.pereira@email.com",
+    matter: "Special Conditions Retirement",
+    category: "construction",
+    goal: "goal_special",
+    docOverrides: {},
+  }),
+  buildCase({
+    client: "Ana Rita Costa",
+    email: "ana.costa@email.com",
+    matter: "Age-Based Retirement",
+    category: "self_employed",
+    goal: "goal_age",
+    docOverrides: {
+      identity: ["uploaded", "uploaded", "uploaded"],
+      contributions: ["uploaded", "uploaded", "uploaded"],
+      employment: ["uploaded"],
+    },
+  }),
+];
+
+/* ================================================================== */
+/*  HELPERS                                                            */
+/* ================================================================== */
+function folderProgress(folder) {
+  const total = folder.docs.length;
+  const done = folder.docs.filter((d) => d.status === "uploaded").length;
+  return { done, total, complete: total > 0 && done === total };
+}
+
+function caseProgress(kase) {
+  const docs = kase.folders.flatMap((f) => f.docs);
+  const total = docs.length;
+  const done = docs.filter((d) => d.status === "uploaded").length;
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 0, remaining: total - done };
+}
+
+function caseStatus(kase) {
+  if (kase.confirmed) return "confirmed";
+  const { done, total } = caseProgress(kase);
+  if (done === 0) return "not-started";
+  if (done === total) return "ready";
+  return "in-progress";
+}
+
+/* ================================================================== */
+/*  VISUAL DOCUMENT PREVIEW COMPONENT                                  */
+/* ================================================================== */
+function DocVisualPreview({ doc, lang }) {
+  const fields = doc.visualFields || [];
+  const type = doc.visualType || "letter";
+
+  const containerStyle = {
+    width: "100%",
+    maxWidth: 220,
+    minHeight: 160,
+    background: "#fff",
+    border: `1.5px solid ${BRAND.goldBorder}`,
+    borderRadius: 8,
+    padding: "14px 12px",
+    fontFamily: "'Courier New', monospace",
+    fontSize: 9,
+    lineHeight: 1.5,
+    color: BRAND.ink,
+    position: "relative",
+    overflow: "hidden",
+    flexShrink: 0,
+  };
+
+  if (type === "id-card") {
+    return (
+      <div style={containerStyle}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <div style={{ width: 36, height: 44, background: BRAND.creamDark, borderRadius: 4, border: `1px solid ${BRAND.goldBorder}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Users size={14} style={{ color: BRAND.inkLight }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            {fields.slice(0, 2).map((f, i) => (
+              <div key={i} style={{ marginBottom: 2, fontSize: 8.5, wordBreak: "break-all" }}>{f}</div>
+            ))}
+          </div>
+        </div>
+        {fields.slice(2).map((f, i) => (
+          <div key={i} style={{ fontSize: 8, color: BRAND.inkLight, marginBottom: 1 }}>{f}</div>
+        ))}
+        <div style={{ position: "absolute", bottom: 6, right: 8, width: 24, height: 24, borderRadius: "50%", border: `1.5px solid ${BRAND.forest}`, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.3 }}>
+          <Check size={10} style={{ color: BRAND.forest }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "table") {
+    return (
+      <div style={containerStyle}>
+        {fields.map((f, i) => (
+          <div key={i} style={{ fontSize: i < 2 ? 9 : 8, fontWeight: i < 2 ? 700 : 400, marginBottom: i < 2 ? 4 : 1, borderBottom: i === 2 ? `1px solid ${BRAND.goldBorder}` : "none", paddingBottom: i === 2 ? 3 : 0, color: i < 2 ? BRAND.forest : BRAND.ink }}>
+            {f}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "certificate") {
+    return (
+      <div style={{ ...containerStyle, textAlign: "center", border: `2px double ${BRAND.forest}`, padding: "16px 10px" }}>
+        {fields.map((f, i) => (
+          <div key={i} style={{ fontSize: i < 2 ? 9 : 8, fontWeight: i < 2 ? 700 : 400, marginBottom: i < 2 ? 2 : 3, color: i < 2 ? BRAND.forest : BRAND.ink, fontStyle: i >= 3 ? "italic" : "normal" }}>
+            {f}
+          </div>
+        ))}
+        <div style={{ marginTop: 8, width: 30, height: 30, borderRadius: "50%", border: `1.5px solid ${BRAND.forest}`, margin: "8px auto 0", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.25 }}>
+          <FileText size={12} style={{ color: BRAND.forest }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "form") {
+    return (
+      <div style={containerStyle}>
+        {fields.map((f, i) => (
+          <div key={i} style={{ fontSize: i < 2 ? 9 : 8, fontWeight: i < 2 ? 700 : 400, marginBottom: i < 2 ? 3 : 2, color: i < 2 ? BRAND.forest : BRAND.ink, borderBottom: i >= 2 ? `1px dotted ${BRAND.goldBorder}` : "none", paddingBottom: 2 }}>
+            {f}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "workbook") {
+    return (
+      <div style={{ ...containerStyle, borderLeft: `4px solid ${BRAND.forest}` }}>
+        {fields.map((f, i) => (
+          <div key={i} style={{ fontSize: i < 2 ? 10 : 8, fontWeight: i < 2 ? 700 : 400, marginBottom: i < 2 ? 2 : 3, color: i < 2 ? BRAND.forest : BRAND.ink, textAlign: i < 2 ? "center" : "left" }}>
+            {f}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // "letter" default
+  return (
+    <div style={containerStyle}>
+      {fields.map((f, i) => (
+        <div key={i} style={{ fontSize: i < 2 ? 9 : 8, fontWeight: i < 2 ? 700 : 400, marginBottom: i < 2 ? 4 : 2, color: i < 2 ? BRAND.forest : BRAND.ink }}>
+          {f}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  SMALL REUSABLE COMPONENTS                                          */
+/* ================================================================== */
+function ProgressBar({ pct, height = 8 }) {
+  return (
+    <div style={{ width: "100%", height, background: BRAND.creamDark, borderRadius: height / 2, overflow: "hidden" }}>
+      <div
+        style={{
+          width: `${pct}%`,
+          height: "100%",
+          background: pct === 100 ? BRAND.forest : BRAND.gold,
+          borderRadius: height / 2,
+          transition: "width 400ms ease",
+        }}
+      />
+    </div>
+  );
+}
+
+function ProgressRing({ pct, size = 56 }) {
+  const r = (size - 8) / 2;
+  const c = 2 * Math.PI * r;
+  const color = pct === 100 ? BRAND.forest : BRAND.gold;
+  return (
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={BRAND.creamDark} strokeWidth="5" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c - (pct / 100) * c} style={{ transition: "stroke-dashoffset 400ms ease" }} />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 600, color: BRAND.ink }}>
+        {pct}%
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }) {
+  const { t } = useLang();
+  const meta = {
+    "not-started": { label: t("notStarted"), bg: BRAND.creamDark, color: BRAND.inkLight, border: BRAND.goldBorder },
+    "in-progress": { label: t("inProgress"), bg: "#fff7ed", color: "#c2410c", border: "#fdba74" },
+    ready: { label: t("readyForReview"), bg: BRAND.forestBg, color: BRAND.forest, border: BRAND.forest },
+    confirmed: { label: t("confirmed"), bg: BRAND.forestBg, color: BRAND.forest, border: BRAND.forest },
+  };
+  const m = meta[status] || meta["not-started"];
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 999, border: `1px solid ${m.border}`, background: m.bg, color: m.color, fontSize: 12, fontWeight: 500 }}>
+      {status === "confirmed" && <CheckCircle size={12} />}
+      {m.label}
+    </span>
+  );
+}
+
+function CategoryBadge({ category }) {
+  const { t } = useLang();
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 4, background: BRAND.forestBg, color: BRAND.forest, fontSize: 11, fontWeight: 500 }}>
+      <Briefcase size={10} />
+      {t(`cat_${category}`)}
+    </span>
+  );
+}
+
+/* ================================================================== */
+/*  DOCUMENT CARD — RICH CONTEXT (CLIENT VIEW)                         */
+/* ================================================================== */
+function DocumentCard({ doc, onToggle, readOnly }) {
+  const { lang, t } = useLang();
+  const [showDetails, setShowDetails] = useState(false);
+  const uploaded = doc.status === "uploaded";
+  const name = lang === "pt" && doc.namePt ? doc.namePt : doc.name;
+  const summary = lang === "pt" && doc.summaryPt ? doc.summaryPt : doc.summary;
+  const fields = lang === "pt" && doc.requiredFieldsPt ? doc.requiredFieldsPt : doc.requiredFields;
+  const tips = lang === "pt" && doc.tipsPt ? doc.tipsPt : doc.tips;
+
+  return (
+    <div style={{ background: BRAND.white, border: `1px solid ${uploaded ? BRAND.forest : BRAND.goldBorder}`, borderRadius: 10, padding: 0, marginBottom: 12, overflow: "hidden", transition: "border-color 200ms" }}>
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 16px", cursor: "pointer" }} onClick={() => setShowDetails(!showDetails)}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${uploaded ? BRAND.forest : "#ccc"}`, background: uploaded ? BRAND.forest : BRAND.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            {uploaded && <Check size={13} color={BRAND.white} />}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: uploaded ? BRAND.inkLight : BRAND.ink, textDecoration: uploaded ? "line-through" : "none" }}>{name}</div>
+            <div style={{ fontSize: 12, color: BRAND.inkLight, marginTop: 2 }}>{summary}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {!readOnly && !uploaded && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggle(doc.id); }}
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 6, border: "none", background: BRAND.gold, color: BRAND.white, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = BRAND.goldHover)}
+              onMouseLeave={(e) => (e.currentTarget.style.background = BRAND.gold)}
+            >
+              <Upload size={12} /> {t("uploadDocument")}
+            </button>
+          )}
+          {uploaded && (
+            <span style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, background: BRAND.forestBg, color: BRAND.forest, fontSize: 12, fontWeight: 500 }}>
+              <Check size={12} /> {t("uploaded")}
+            </span>
+          )}
+          {showDetails ? <ChevronUp size={16} color={BRAND.inkLight} /> : <ChevronDown size={16} color={BRAND.inkLight} />}
+        </div>
+      </div>
+
+      {/* Expanded detail panel with visual example on the right */}
+      {showDetails && (
+        <div style={{ borderTop: `1px solid ${BRAND.creamDark}`, padding: "16px", display: "flex", gap: 20, flexWrap: "wrap" }}>
+          {/* Left: details */}
+          <div style={{ flex: "1 1 280px", minWidth: 200 }}>
+            {/* Required Fields */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, fontSize: 12, fontWeight: 600, color: BRAND.forest }}>
+                <ClipboardCheck size={14} /> {t("requiredFields")}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {fields?.map((field, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 12, color: BRAND.ink }}>
+                    <Circle size={6} style={{ marginTop: 5, flexShrink: 0, color: BRAND.gold }} fill={BRAND.gold} />
+                    {field}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Purpose */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontSize: 12, fontWeight: 600, color: BRAND.forest }}>
+                <Info size={14} /> {t("purpose")}
+              </div>
+              <div style={{ fontSize: 12, color: BRAND.inkLight, lineHeight: 1.6 }}>{summary}</div>
+            </div>
+
+            {/* Tips */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontSize: 12, fontWeight: 600, color: BRAND.forest }}>
+                <AlertTriangle size={14} /> {t("tips")}
+              </div>
+              <div style={{ fontSize: 12, color: BRAND.inkLight, lineHeight: 1.6, background: BRAND.creamDark, padding: "8px 12px", borderRadius: 6 }}>{tips}</div>
+            </div>
+
+            {/* Example link */}
+            {doc.exampleUrl && (
+              <a href={doc.exampleUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color: BRAND.forest, fontWeight: 500, textDecoration: "none" }}
+                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+              >
+                <ExternalLink size={12} /> {t("viewExample")}
+              </a>
+            )}
+          </div>
+
+          {/* Right: visual preview */}
+          <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: BRAND.inkLight, textTransform: "uppercase", letterSpacing: 1 }}>
+              {lang === "pt" ? "Exemplo Visual" : "Visual Example"}
+            </div>
+            <DocVisualPreview doc={doc} lang={lang} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  DOCUMENT ROW — COMPACT (LAWYER VIEW)                               */
+/* ================================================================== */
+function DocumentRowCompact({ doc, lang }) {
+  const uploaded = doc.status === "uploaded";
+  const name = lang === "pt" && doc.namePt ? doc.namePt : doc.name;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${BRAND.creamDark}` }}>
+      <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${uploaded ? BRAND.forest : "#ccc"}`, background: uploaded ? BRAND.forest : BRAND.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        {uploaded && <Check size={11} color={BRAND.white} />}
+      </div>
+      <div style={{ flex: 1, fontSize: 13, color: uploaded ? BRAND.inkLight : BRAND.ink, textDecoration: uploaded ? "line-through" : "none" }}>
+        {name}
+      </div>
+      <span style={{ fontSize: 11, fontWeight: 500, color: uploaded ? BRAND.forest : BRAND.danger, padding: "2px 8px", borderRadius: 4, background: uploaded ? BRAND.forestBg : BRAND.dangerLight }}>
+        {uploaded ? "✓" : "—"}
+      </span>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  SECTION FOLDER CARD                                                */
+/* ================================================================== */
+function SectionFolder({ folder, expanded, onExpand, onToggleDoc, readOnly, mode }) {
+  const { t, lang } = useLang();
+  const { done, total, complete } = folderProgress(folder);
+  const sectionLabel = t(`sec_${folder.sectionKey}`) || folder.sectionKey;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      {/* Folder tab */}
+      <div style={{ marginLeft: 16, width: 100, height: 14, borderRadius: "6px 6px 0 0", border: `1px solid ${complete ? BRAND.forest : BRAND.goldBorder}`, borderBottom: "none", background: complete ? BRAND.forestBg : BRAND.creamDark }} />
+      <div style={{ border: `1px solid ${complete ? BRAND.forest : BRAND.goldBorder}`, borderRadius: "0 10px 10px 10px", background: BRAND.white, overflow: "hidden", position: "relative" }}>
+        {complete && (
+          <div style={{ position: "absolute", top: 10, right: 14, transform: "rotate(-8deg)", border: `2px double ${BRAND.forest}`, borderRadius: "50%", width: 50, height: 50, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.5 }}>
+            <span style={{ fontSize: 7, fontWeight: 700, color: BRAND.forest, letterSpacing: 1 }}>COMPLETE</span>
+          </div>
+        )}
+        <button onClick={onExpand} style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <FolderOpen size={18} style={{ color: complete ? BRAND.forest : BRAND.gold }} />
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: BRAND.ink }}>{sectionLabel}</div>
+              <div style={{ fontSize: 12, color: BRAND.inkLight }}>{done} of {total} {lang === "pt" ? "documentos recebidos" : "documents received"}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <ProgressBar pct={total ? (done / total) * 100 : 0} height={6} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: BRAND.inkLight, minWidth: 36, textAlign: "right" }}>{done}/{total}</span>
+            {expanded ? <ChevronUp size={16} color={BRAND.inkLight} /> : <ChevronDown size={16} color={BRAND.inkLight} />}
+          </div>
+        </button>
+        {expanded && (
+          <div style={{ borderTop: `1px solid ${BRAND.creamDark}`, padding: "8px 16px 16px" }}>
+            {folder.docs.map((doc) =>
+              mode === "client" ? (
+                <DocumentCard key={doc.id} doc={doc} onToggle={(id) => onToggleDoc(folder.id, id)} readOnly={readOnly} />
+              ) : (
+                <DocumentRowCompact key={doc.id} doc={doc} lang={lang} />
+              )
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  LOGIN SCREEN                                                       */
+/* ================================================================== */
+function LoginScreen({ onLogin }) {
+  const { t } = useLang();
+  const [role, setRole] = useState("client");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const demoEmails = { client: "maria.silva@email.com", lawyer: "advogado@escritorio.com" };
+
+  useEffect(() => {
+    setEmail(demoEmails[role]);
+  }, [role]);
+
+  return (
+    <div style={{ minHeight: "100vh", background: BRAND.cream, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 420, background: BRAND.white, borderRadius: 16, padding: "40px 32px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
+        {/* Logo area */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 12, background: BRAND.forest, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+            <FileText size={28} color={BRAND.gold} />
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: BRAND.ink, margin: 0 }}>{t("loginTitle")}</h1>
+          <p style={{ fontSize: 13, color: BRAND.inkLight, marginTop: 6 }}>{t("loginSubtitle")}</p>
+        </div>
+
+        {/* Role toggle */}
+        <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: `1px solid ${BRAND.goldBorder}`, marginBottom: 24 }}>
+          <button
+            onClick={() => setRole("client")}
+            style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", background: role === "client" ? BRAND.gold : BRAND.white, color: role === "client" ? BRAND.white : BRAND.ink, transition: "all 200ms" }}
+          >
+            {t("loginAsClient")}
+          </button>
+          <button
+            onClick={() => setRole("lawyer")}
+            style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", background: role === "lawyer" ? BRAND.gold : BRAND.white, color: role === "lawyer" ? BRAND.white : BRAND.ink, transition: "all 200ms" }}
+          >
+            {t("loginAsLawyer")}
+          </button>
+        </div>
+
+        {/* Form */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: BRAND.ink, marginBottom: 6 }}>{t("emailLabel")}</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${BRAND.goldBorder}`, fontSize: 14, color: BRAND.ink, background: BRAND.cream, outline: "none", boxSizing: "border-box" }}
+          />
+        </div>
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: BRAND.ink, marginBottom: 6 }}>{t("passwordLabel")}</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${BRAND.goldBorder}`, fontSize: 14, color: BRAND.ink, background: BRAND.cream, outline: "none", boxSizing: "border-box" }}
+          />
+        </div>
+
+        <button
+          onClick={() => onLogin(role)}
+          style={{ width: "100%", padding: "12px 0", borderRadius: 8, border: "none", background: BRAND.gold, color: BRAND.white, fontSize: 14, fontWeight: 700, cursor: "pointer", transition: "background 200ms" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = BRAND.goldHover)}
+          onMouseLeave={(e) => (e.currentTarget.style.background = BRAND.gold)}
+        >
+          {t("loginButton")}
+        </button>
+
+        <p style={{ textAlign: "center", fontSize: 11, color: BRAND.inkLight, marginTop: 16 }}>{t("demoHint")}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  SETTINGS MODAL                                                     */
+/* ================================================================== */
+function SettingsModal({ onClose, lang, setLang }) {
+  const { t } = useLang();
+  const [tempLang, setTempLang] = useState(lang);
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 400, background: BRAND.white, borderRadius: 14, padding: "28px 24px", boxShadow: "0 8px 32px rgba(0,0,0,0.15)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: BRAND.ink, margin: 0 }}>{t("settingsTitle")}</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: BRAND.inkLight }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, color: BRAND.ink, marginBottom: 10 }}>
+            <Globe size={16} /> {t("languageLabel")}
+          </label>
+          <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: `1px solid ${BRAND.goldBorder}` }}>
+            <button onClick={() => setTempLang("en")} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", background: tempLang === "en" ? BRAND.gold : BRAND.white, color: tempLang === "en" ? BRAND.white : BRAND.ink }}>
+              🇺🇸 English
+            </button>
+            <button onClick={() => setTempLang("pt")} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", background: tempLang === "pt" ? BRAND.gold : BRAND.white, color: tempLang === "pt" ? BRAND.white : BRAND.ink }}>
+              🇧🇷 Português
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: `1px solid ${BRAND.goldBorder}`, background: BRAND.white, color: BRAND.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            {t("cancel")}
+          </button>
+          <button onClick={() => { setLang(tempLang); onClose(); }} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", background: BRAND.gold, color: BRAND.white, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+            {t("save")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  CLIENT PORTAL                                                      */
+/* ================================================================== */
+function ClientPortal({ cases, onToggleDoc }) {
+  const { t, lang } = useLang();
+  const [expandedFolder, setExpandedFolder] = useState(null);
+
+  // Client sees first case (simulating single-client view)
+  const kase = cases[0];
+  if (!kase) return null;
+
+  const { pct, remaining } = caseProgress(kase);
+  const status = caseStatus(kase);
+
+  return (
+    <div style={{ maxWidth: 780, margin: "0 auto", padding: "24px 16px 48px" }}>
+      {/* Welcome + reminder banner */}
+      {status !== "confirmed" && remaining > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 10, background: BRAND.creamDark, border: `1px solid ${BRAND.goldBorder}`, marginBottom: 20 }}>
+          <Bell size={16} style={{ color: BRAND.gold, flexShrink: 0 }} />
+          <div style={{ fontSize: 13, color: BRAND.ink }}>
+            <strong>{remaining} {t("docsRemaining")}</strong> — {t("reminderBanner")}
+          </div>
+        </div>
+      )}
+
+      {status === "ready" && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 10, background: BRAND.forestBg, border: `1px solid ${BRAND.forest}`, marginBottom: 20 }}>
+          <CheckCircle size={16} style={{ color: BRAND.forest, flexShrink: 0 }} />
+          <div style={{ fontSize: 13, color: BRAND.forest, fontWeight: 500 }}>{t("allDocsSubmitted")}</div>
+        </div>
+      )}
+
+      {status === "confirmed" && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 10, background: BRAND.forestBg, border: `1px solid ${BRAND.forest}`, marginBottom: 20 }}>
+          <CheckCircle size={16} style={{ color: BRAND.forest, flexShrink: 0 }} />
+          <div style={{ fontSize: 13, color: BRAND.forest, fontWeight: 500 }}>{t("receiptConfirmed")}</div>
+        </div>
+      )}
+
+      {/* Case overview card */}
+      <div style={{ background: BRAND.white, borderRadius: 14, border: `1px solid ${BRAND.goldBorder}`, padding: "20px 24px", marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <ProgressRing pct={pct} size={68} />
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: BRAND.ink }}>{kase.matter}</div>
+            <div style={{ fontSize: 13, color: BRAND.inkLight, marginTop: 2 }}>{kase.client}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+              <StatusBadge status={status} />
+              <CategoryBadge category={kase.category} />
+            </div>
+          </div>
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: BRAND.inkLight, marginBottom: 6 }}>
+            <span>{t("overallProgress")}</span>
+            <span>{pct}%</span>
+          </div>
+          <ProgressBar pct={pct} height={10} />
+        </div>
+      </div>
+
+      {/* Document sections */}
+      {kase.folders.map((folder) => (
+        <SectionFolder
+          key={folder.id}
+          folder={folder}
+          expanded={expandedFolder === folder.id}
+          onExpand={() => setExpandedFolder(expandedFolder === folder.id ? null : folder.id)}
+          onToggleDoc={(folderId, docId) => onToggleDoc(kase.id, folderId, docId)}
+          readOnly={status === "confirmed"}
+          mode="client"
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  NEW CASE MODAL (LAWYER)                                            */
+/* ================================================================== */
+function NewCaseModal({ onClose, onCreate }) {
+  const { t, lang } = useLang();
+  const [client, setClient] = useState("");
+  const [email, setEmail] = useState("");
+  const [category, setCategory] = useState("");
+  const [goal, setGoal] = useState("");
+  const [customDocs, setCustomDocs] = useState([]);
+
+  const categories = ["teacher_union", "teacher_non_union", "construction", "government", "private_clt", "rural", "self_employed"];
+  const goals = ["goal_age", "goal_contribution", "goal_special", "goal_disability"];
+
+  const previewDocs = category ? groupBySection(getDocsForCategory(category)) : {};
+
+  const addCustomDoc = () => {
+    setCustomDocs([...customDocs, { id: uid("custom"), name: "", summary: "", section: "additional" }]);
+  };
+
+  const removeCustomDoc = (id) => {
+    setCustomDocs(customDocs.filter((d) => d.id !== id));
+  };
+
+  const updateCustomDoc = (id, field, value) => {
+    setCustomDocs(customDocs.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
+  };
+
+  const handleCreate = () => {
+    const baseDocs = getDocsForCategory(category);
+    const allDocs = [...baseDocs, ...customDocs.filter((d) => d.name).map((d) => ({ ...d, requiredFields: [], requiredFieldsPt: [], tips: "", tipsPt: "", visualType: "letter", visualFields: [d.name, d.summary || ""] }))];
+    const sections = groupBySection(allDocs);
+    const folders = Object.entries(sections).map(([sectionKey, docs]) => ({
+      id: uid("folder"),
+      sectionKey,
+      docs: docs.map((d) => ({ id: uid("doc"), ...d, status: "missing" })),
+    }));
+    onCreate({ client, email, matter: t(goal) || goal, category, goal, folders });
+  };
+
+  const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${BRAND.goldBorder}`, fontSize: 13, color: BRAND.ink, background: BRAND.cream, outline: "none", boxSizing: "border-box" };
+  const selectStyle = { ...inputStyle, appearance: "none", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231b232a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "flex-start", justifyContent: "center", background: "rgba(0,0,0,0.35)", padding: "40px 20px", overflowY: "auto" }}>
+      <div style={{ width: "100%", maxWidth: 560, background: BRAND.white, borderRadius: 14, padding: "28px 24px", boxShadow: "0 8px 32px rgba(0,0,0,0.15)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: BRAND.ink, margin: 0 }}>{t("newCaseTitle")}</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: BRAND.inkLight }}><X size={18} /></button>
+        </div>
+
+        {/* Client info */}
+        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 200px" }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: BRAND.ink, marginBottom: 6 }}>{t("clientName")}</label>
+            <input value={client} onChange={(e) => setClient(e.target.value)} placeholder="e.g. Maria da Silva Santos" style={inputStyle} />
+          </div>
+          <div style={{ flex: "1 1 200px" }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: BRAND.ink, marginBottom: 6 }}>{t("clientEmail")}</label>
+            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. maria@email.com" style={inputStyle} />
+          </div>
+        </div>
+
+        {/* Job category */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: BRAND.ink, marginBottom: 6 }}>{t("jobCategory")}</label>
+          <select value={category} onChange={(e) => setCategory(e.target.value)} style={selectStyle}>
+            <option value="">{t("selectCategory")}</option>
+            {categories.map((c) => <option key={c} value={c}>{t(`cat_${c}`)}</option>)}
+          </select>
+        </div>
+
+        {/* Retirement goal */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: BRAND.ink, marginBottom: 6 }}>{t("retirementGoal")}</label>
+          <select value={goal} onChange={(e) => setGoal(e.target.value)} style={selectStyle}>
+            <option value="">{t("selectGoal")}</option>
+            {goals.map((g) => <option key={g} value={g}>{t(g)}</option>)}
+          </select>
+        </div>
+
+        {/* Preview of auto-generated docs */}
+        {category && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: BRAND.ink, marginBottom: 10 }}>{t("requiredDocSections")}</div>
+            <div style={{ maxHeight: 220, overflowY: "auto", border: `1px solid ${BRAND.creamDark}`, borderRadius: 8, padding: 12 }}>
+              {Object.entries(previewDocs).map(([section, docs]) => (
+                <div key={section} style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: BRAND.forest, marginBottom: 4 }}>{t(`sec_${section}`)}</div>
+                  {docs.map((d, i) => (
+                    <div key={i} style={{ fontSize: 12, color: BRAND.inkLight, paddingLeft: 12, marginBottom: 2 }}>• {lang === "pt" && d.namePt ? d.namePt : d.name}</div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Custom docs */}
+        {customDocs.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            {customDocs.map((cd) => (
+              <div key={cd.id} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "flex-start" }}>
+                <div style={{ flex: 1 }}>
+                  <input value={cd.name} onChange={(e) => updateCustomDoc(cd.id, "name", e.target.value)} placeholder={t("docName")} style={{ ...inputStyle, marginBottom: 4 }} />
+                  <input value={cd.summary} onChange={(e) => updateCustomDoc(cd.id, "summary", e.target.value)} placeholder={t("docDescription")} style={inputStyle} />
+                </div>
+                <button onClick={() => removeCustomDoc(cd.id)} style={{ background: "none", border: "none", cursor: "pointer", color: BRAND.danger, marginTop: 8 }}><X size={16} /></button>
+              </div>
+            ))}
+          </div>
+        )}
+        <button onClick={addCustomDoc} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: BRAND.forest, fontWeight: 600, background: "none", border: "none", cursor: "pointer", marginBottom: 20, padding: 0 }}>
+          <Plus size={14} /> {t("addCustomDoc")}
+        </button>
+
+        {/* Create button */}
+        <button
+          disabled={!client || !category || !goal}
+          onClick={handleCreate}
+          style={{ width: "100%", padding: "12px 0", borderRadius: 8, border: "none", background: !client || !category || !goal ? "#ccc" : BRAND.gold, color: BRAND.white, fontSize: 14, fontWeight: 700, cursor: !client || !category || !goal ? "not-allowed" : "pointer" }}
+        >
+          {t("createCase")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  NOTIFICATION CENTER (LAWYER)                                       */
+/* ================================================================== */
+function NotificationCenter({ cases, onNavigate }) {
+  const { t, lang } = useLang();
+  const [open, setOpen] = useState(false);
+
+  const notifications = [];
+  cases.forEach((c) => {
+    const { pct, remaining } = caseProgress(c);
+    const status = caseStatus(c);
+    if (status === "ready") {
+      notifications.push({ id: c.id, type: "ready", client: c.client, message: t("allDocsReceived"), urgent: true });
+    } else if (status === "in-progress" && remaining > 0) {
+      notifications.push({ id: c.id, type: "progress", client: c.client, message: `${remaining} ${t("docsRemaining")}`, urgent: remaining > 3 });
+    }
+  });
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button onClick={() => setOpen(!open)} style={{ position: "relative", padding: 8, borderRadius: 8, border: `1px solid ${BRAND.goldBorder}`, background: BRAND.white, cursor: "pointer" }}>
+        <Bell size={18} style={{ color: BRAND.ink }} />
+        {notifications.length > 0 && (
+          <span style={{ position: "absolute", top: -4, right: -4, width: 18, height: 18, borderRadius: "50%", background: BRAND.danger, color: BRAND.white, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {notifications.length}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 320, maxHeight: 360, overflowY: "auto", borderRadius: 12, border: `1px solid ${BRAND.goldBorder}`, background: BRAND.white, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 40, padding: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: BRAND.ink, padding: "8px 8px 12px" }}>{t("notifications")}</div>
+          {notifications.length === 0 ? (
+            <div style={{ padding: "16px 8px", textAlign: "center", fontSize: 13, color: BRAND.inkLight }}>{t("noNotifications")}</div>
+          ) : (
+            notifications.map((n, i) => (
+              <button
+                key={i}
+                onClick={() => { onNavigate(n.id); setOpen(false); }}
+                style={{ display: "flex", alignItems: "flex-start", gap: 10, width: "100%", padding: "10px 8px", borderRadius: 8, border: "none", background: "none", cursor: "pointer", textAlign: "left" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = BRAND.creamDark)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+              >
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.urgent ? BRAND.danger : BRAND.gold, marginTop: 5, flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: BRAND.ink }}>{n.client}</div>
+                  <div style={{ fontSize: 12, color: BRAND.inkLight }}>{n.message}</div>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  LAWYER DASHBOARD                                                   */
+/* ================================================================== */
+function LawyerDashboard({ cases, onToggleDoc, onConfirm, onCreateCase, onSendReminder }) {
+  const { t, lang } = useLang();
+  const [openCaseId, setOpenCaseId] = useState(null);
+  const [expandedFolder, setExpandedFolder] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [reminderSent, setReminderSent] = useState(null);
+
+  const openCase = cases.find((c) => c.id === openCaseId);
+
+  const filteredCases = cases.filter((c) => {
+    const matchesSearch = c.client.toLowerCase().includes(searchQuery.toLowerCase()) || c.matter.toLowerCase().includes(searchQuery.toLowerCase());
+    const status = caseStatus(c);
+    const matchesFilter = filterStatus === "all" || (filterStatus === "active" && !c.confirmed) || (filterStatus === "complete" && c.confirmed);
+    return matchesSearch && matchesFilter;
+  });
+
+  const handleReminder = (caseId) => {
+    onSendReminder(caseId);
+    setReminderSent(caseId);
+    setTimeout(() => setReminderSent(null), 2000);
+  };
+
+  // Case detail view
+  if (openCase) {
+    const { pct, done, total, remaining } = caseProgress(openCase);
+    const status = caseStatus(openCase);
+    return (
+      <div style={{ maxWidth: 780, margin: "0 auto", padding: "24px 16px 48px" }}>
+        <button onClick={() => setOpenCaseId(null)} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: BRAND.inkLight, background: "none", border: "none", cursor: "pointer", marginBottom: 20, padding: 0 }}>
+          <ArrowLeft size={14} /> {t("backToAll")}
+        </button>
+
+        <div style={{ background: BRAND.white, borderRadius: 14, border: `1px solid ${BRAND.goldBorder}`, padding: "20px 24px", marginBottom: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <ProgressRing pct={pct} size={68} />
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: BRAND.ink }}>{openCase.client}</div>
+              <div style={{ fontSize: 13, color: BRAND.inkLight }}>{openCase.matter}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                <StatusBadge status={status} />
+                <CategoryBadge category={openCase.category} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {status !== "confirmed" && remaining > 0 && (
+                <button
+                  onClick={() => handleReminder(openCase.id)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: `1px solid ${BRAND.goldBorder}`, background: BRAND.white, color: BRAND.ink, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                >
+                  {reminderSent === openCase.id ? <><CheckCircle size={14} style={{ color: BRAND.forest }} /> {t("reminderSent")}</> : <><Mail size={14} /> {t("sendReminder")}</>}
+                </button>
+              )}
+              {status === "ready" && (
+                <button
+                  onClick={() => onConfirm(openCase.id)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: "none", background: BRAND.forest, color: BRAND.white, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                >
+                  <ClipboardCheck size={14} /> {t("confirmReceipt")}
+                </button>
+              )}
+            </div>
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: BRAND.inkLight, marginBottom: 6 }}>
+              <span>{t("overallProgress")}</span>
+              <span>{done}/{total} — {pct}%</span>
+            </div>
+            <ProgressBar pct={pct} height={10} />
+          </div>
+        </div>
+
+        {openCase.folders.map((folder) => (
+          <SectionFolder
+            key={folder.id}
+            folder={folder}
+            expanded={expandedFolder === folder.id}
+            onExpand={() => setExpandedFolder(expandedFolder === folder.id ? null : folder.id)}
+            onToggleDoc={() => {}}
+            readOnly
+            mode="lawyer"
+          />
+        ))}
+        <p style={{ textAlign: "center", fontSize: 12, color: BRAND.inkLight, marginTop: 8 }}>{t("readOnlyNote")}</p>
+      </div>
+    );
+  }
+
+  // Case list view
+  return (
+    <div style={{ maxWidth: 880, margin: "0 auto", padding: "24px 16px 48px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Users size={20} style={{ color: BRAND.forest }} />
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: BRAND.ink, margin: 0 }}>{t("allCases")}</h2>
+          <span style={{ fontSize: 13, color: BRAND.inkLight, marginLeft: 4 }}>({cases.length})</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <NotificationCenter cases={cases} onNavigate={(id) => setOpenCaseId(id)} />
+          <button
+            onClick={() => setShowModal(true)}
+            style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 8, border: "none", background: BRAND.gold, color: BRAND.white, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = BRAND.goldHover)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = BRAND.gold)}
+          >
+            <Plus size={15} /> {t("newCase")}
+          </button>
+        </div>
+      </div>
+
+      {/* Search + Filter bar */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 260px", position: "relative" }}>
+          <Search size={16} style={{ position: "absolute", left: 12, top: 11, color: BRAND.inkLight }} />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t("searchPlaceholder")}
+            style={{ width: "100%", padding: "10px 12px 10px 36px", borderRadius: 8, border: `1px solid ${BRAND.goldBorder}`, fontSize: 13, color: BRAND.ink, background: BRAND.white, outline: "none", boxSizing: "border-box" }}
+          />
+        </div>
+        <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: `1px solid ${BRAND.goldBorder}` }}>
+          {["all", "active", "complete"].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilterStatus(f)}
+              style={{ padding: "10px 16px", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: filterStatus === f ? BRAND.gold : BRAND.white, color: filterStatus === f ? BRAND.white : BRAND.ink, transition: "all 150ms" }}
+            >
+              {t(`filter${f.charAt(0).toUpperCase() + f.slice(1)}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Case cards */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {filteredCases.map((c) => {
+          const { pct, done, total, remaining } = caseProgress(c);
+          const status = caseStatus(c);
+          return (
+            <button
+              key={c.id}
+              onClick={() => setOpenCaseId(c.id)}
+              style={{ display: "flex", alignItems: "center", gap: 16, width: "100%", padding: "16px 20px", borderRadius: 12, border: `1px solid ${BRAND.goldBorder}`, background: BRAND.white, cursor: "pointer", textAlign: "left", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", transition: "border-color 200ms, box-shadow 200ms" }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = BRAND.gold; e.currentTarget.style.boxShadow = "0 2px 12px rgba(228,197,138,0.25)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = BRAND.goldBorder; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}
+            >
+              <ProgressRing pct={pct} size={50} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: BRAND.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.client}</div>
+                <div style={{ fontSize: 12, color: BRAND.inkLight, marginTop: 2 }}>{c.matter}</div>
+                <div style={{ marginTop: 6 }}>
+                  <CategoryBadge category={c.category} />
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                <StatusBadge status={status} />
+                <span style={{ fontSize: 12, color: BRAND.inkLight }}>{done}/{total} docs</span>
+              </div>
+            </button>
+          );
+        })}
+        {filteredCases.length === 0 && (
+          <div style={{ textAlign: "center", padding: 40, color: BRAND.inkLight, fontSize: 14 }}>
+            {lang === "pt" ? "Nenhum caso encontrado." : "No cases found."}
+          </div>
+        )}
+      </div>
+
+      {showModal && (
+        <NewCaseModal
+          onClose={() => setShowModal(false)}
+          onCreate={(newCase) => { onCreateCase(newCase); setShowModal(false); }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  APP SHELL                                                          */
+/* ================================================================== */
+function App() {
+  const [lang, setLang] = useState("en");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [role, setRole] = useState("client");
+  const [cases, setCases] = useState(seedCases);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const t = useCallback((key) => TRANSLATIONS[lang]?.[key] || TRANSLATIONS["en"]?.[key] || key, [lang]);
+
+  const langValue = useMemo(() => ({ lang, setLang, t }), [lang, t]);
+
+  const handleLogin = (selectedRole) => {
+    setRole(selectedRole);
+    setLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setLoggedIn(false);
+  };
+
+  const handleToggleDoc = (caseId, folderId, docId) => {
+    setCases((prev) =>
+      prev.map((c) => {
+        if (c.id !== caseId) return c;
+        return {
+          ...c,
+          folders: c.folders.map((f) => {
+            if (f.id !== folderId) return f;
+            return { ...f, docs: f.docs.map((d) => (d.id === docId ? { ...d, status: d.status === "uploaded" ? "missing" : "uploaded" } : d)) };
+          }),
+        };
+      })
+    );
+  };
+
+  const handleConfirm = (caseId) => {
+    setCases((prev) => prev.map((c) => (c.id === caseId ? { ...c, confirmed: true, confirmedAt: new Date().toLocaleDateString() } : c)));
+  };
+
+  const handleCreateCase = ({ client, email, matter, category, goal, folders }) => {
+    setCases((prev) => [...prev, { id: uid("case"), client, email, matter, category, goal, confirmed: false, folders, reminderCadence: "weekly", lastReminder: null, notifications: [] }]);
+  };
+
+  const handleSendReminder = (caseId) => {
+    setCases((prev) => prev.map((c) => (c.id === caseId ? { ...c, lastReminder: new Date().toLocaleDateString() } : c)));
+  };
+
+  return (
+    <LangContext.Provider value={langValue}>
+      {!loggedIn ? (
+        <LoginScreen onLogin={handleLogin} />
+      ) : (
+        <div style={{ minHeight: "100vh", background: BRAND.cream, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: BRAND.ink }}>
+          {/* Header */}
+          <header style={{ background: BRAND.gold, borderBottom: `1px solid ${BRAND.goldHover}`, position: "sticky", top: 0, zIndex: 30 }}>
+            <div style={{ maxWidth: 960, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", height: 56 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: BRAND.forest, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <FileText size={16} color={BRAND.gold} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: BRAND.white }}>{t("portalTitle")}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", fontWeight: 500 }}>
+                    {role === "client" ? t("clientPortal") : t("lawyerDashboard")}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <button
+                  onClick={() => setShowSettings(true)}
+                  style={{ padding: 8, borderRadius: 8, border: "none", background: "rgba(255,255,255,0.15)", cursor: "pointer", display: "flex", alignItems: "center" }}
+                >
+                  <Settings size={16} color={BRAND.white} />
+                </button>
+                <button
+                  onClick={handleLogout}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: "none", background: "rgba(255,255,255,0.15)", color: BRAND.white, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                >
+                  <LogOut size={14} /> {t("signOut")}
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Main content */}
+          {role === "client" ? (
+            <ClientPortal cases={cases} onToggleDoc={handleToggleDoc} />
+          ) : (
+            <LawyerDashboard
+              cases={cases}
+              onToggleDoc={handleToggleDoc}
+              onConfirm={handleConfirm}
+              onCreateCase={handleCreateCase}
+              onSendReminder={handleSendReminder}
+            />
+          )}
+
+          {showSettings && <SettingsModal onClose={() => setShowSettings(false)} lang={lang} setLang={setLang} />}
+        </div>
+      )}
+    </LangContext.Provider>
+  );
+}
+
+
+    const rootElement = document.getElementById('root');
+    ReactDOM.createRoot(rootElement).render(<App />);
+  </script>
+</body>
+</html>
